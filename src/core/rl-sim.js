@@ -10,6 +10,7 @@ const DAUER = 300; // Sekunden Spielzeit
 class RlSimMatch {
   constructor({ seed = Date.now() } = {}) {
     this.rnd = zufall(seed);
+    this.guid = `SIM-${(seed >>> 0).toString(16).toUpperCase()}`; // wie die MatchGuid echter Matches
     this.score = [0, 0];
     this.zeit = DAUER;
     this.overtime = false;
@@ -29,7 +30,7 @@ class RlSimMatch {
   feed(EventName, haupt, zweit) { return { Event: "StatfeedEvent", Data: { EventName, Type: EventName, MainTarget: this.ziel(haupt), ...(zweit ? { SecondaryTarget: this.ziel(zweit) } : {}) } }; }
   zustand() {
     return { Event: "UpdateState", Data: {
-      MatchGuid: "SIM", Players: this.spieler.map((p) => ({ ...p })),
+      MatchGuid: this.guid, Players: this.spieler.map((p) => ({ ...p })),
       Game: { Teams: [{ Name: "Blue", TeamNum: 0, Score: this.score[0] }, { Name: "Orange", TeamNum: 1, Score: this.score[1] }], TimeSeconds: Math.max(0, this.zeit), bOvertime: this.overtime, Arena: "DFH Stadium" },
     } };
   }

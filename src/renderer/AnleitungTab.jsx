@@ -67,8 +67,9 @@ const Regie = ({ goTab }) => (
       <div className="sp-section-label">Control</div>
       <L>
         <li><b>Aktives Spiel</b>: nur dessen Events werden gesendet. Die Game-PCs erfahren den Wechsel sofort.</li>
-        <li><b>Ausgabe</b>: Events, verworfene Events, gesendete OSC-Pakete, Fehler.</li>
-        <li><b>Verbindungscheck</b> je PC: Verbindung steht, Daten kommen (in den letzten 15 s), Spiel passt zum aktiven Spiel, Ping. Ein PC ist ok, wenn alle drei grün sind.</li>
+        <li><b>Ausgabe</b>: Events, verworfene Events, gesendete OSC-Nachrichten, Events mit Fehler. Die Zahlen sind dieselben wie an den Filtern im Event-Log; die Liste zeigt davon die letzten 300. <b>Zurücksetzen</b> setzt alle Zähler auf null und leert das Log.</li>
+        <li><b>Verbindungscheck</b> je PC: Verbindung steht, Daten kommen (in den letzten 15 s), Spiel passt zum aktiven Spiel, Ping. Ein PC ist ok, wenn alle drei grün sind.
+          Die Spalte <b>Match</b> zeigt, ob der PC im selben Match ist wie die meisten: Rocket League liefert eine eindeutige Match-ID, CS2 nicht, dort werden Map und Spielstand verglichen (eine Runde Unterschied ist erlaubt).</li>
         <li><b>Statistik</b>: Spielstand, aktuelle Runde (Kills, Headshots, Bombe, Sieger, MVP) und Match (Runden, Kills, Headshot-Quote, Multikills, Aces, Top-Spieler). Beginnt bei jedem Matchstart neu.</li>
         <li><b>Events</b>: neueste oben, darunter jeder Befehl mit Ziel und OSC-Nachricht. „nicht gesendet“ heißt Ausgabe aus, „kein Befehl“ heißt im Tab Signale nicht belegt.
           Filter: <b>Alle</b> (ohne verworfene), <b>Eingerichtet</b> (Events mit Befehl, gesendet oder nicht), <b>Fehler</b> (Befehl fehlgeschlagen oder Ziel fehlt), <b>Verworfen</b>.</li>

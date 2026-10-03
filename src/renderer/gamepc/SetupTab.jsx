@@ -34,13 +34,13 @@ const PUNKT = { ok: OK, warn: WARN, err: "#ff5d5d" };
 function OverlayVorschau({ farbe }) {
   return (
     <div style={{ position: "relative", width: 64, height: 64, flexShrink: 0 }}>
-      <div style={{ position: "absolute", inset: 6, borderRadius: 14, background: "radial-gradient(circle at 50% 38%, #2a2238, #16131d)", border: "2px solid #9d5cff", boxShadow: "0 0 10px rgba(157,92,255,.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ position: "absolute", inset: 8, borderRadius: 13, background: "radial-gradient(circle at 50% 38%, #2a2238, #16131d)", border: "2px solid #9d5cff", boxShadow: "0 0 5px rgba(157,92,255,.55)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <svg viewBox="36 160 440 262" style={{ width: "70%", filter: "drop-shadow(0 0 4px rgba(157,92,255,.8))" }}>
           <path fill="#a874ff" d="M150 168h212c44 0 74 26 86 70l26 98c11 42-14 78-52 78-24 0-40-14-54-34l-22-32c-8-11-18-16-32-16h-116c-14 0-24 5-32 16l-22 32c-14 20-30 34-54 34-38 0-63-36-52-78l26-98c12-44 42-70 86-70z" />
           <g fill="#16131d"><rect x="148" y="236" width="68" height="22" rx="6" /><rect x="171" y="213" width="22" height="68" rx="6" /><circle cx="350" cy="226" r="15" /><circle cx="384" cy="258" r="15" /><circle cx="316" cy="258" r="15" /><circle cx="350" cy="290" r="15" /></g>
         </svg>
       </div>
-      <div style={{ position: "absolute", right: 2, top: 2, width: 13, height: 13, borderRadius: "50%", border: "2px solid #16131d", background: PUNKT[farbe], boxShadow: `0 0 8px ${PUNKT[farbe]}` }} />
+      <div style={{ position: "absolute", right: 3, top: 3, width: 12, height: 12, borderRadius: "50%", border: "2px solid #16131d", background: PUNKT[farbe] }} />
     </div>
   );
 }

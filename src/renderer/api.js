@@ -85,6 +85,7 @@ function browserApi() {
     onMeldung: abo("meldung"),
     openExternal: async (url) => window.open(url, "_blank"),
     regieLog: async () => regie.alleLogs(),
+    zaehlerZuruecksetzen: async () => { regie.zuruecksetzen(); return true; },
     sessionOeffnen: async () => {
       sessionOffen = !!cfg.regie.session.passwort;
       if (sessionOffen) for (const [id, ip, host, mac, ping] of VORSCHAU_PCS) {

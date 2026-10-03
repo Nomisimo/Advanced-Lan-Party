@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { S, ACCENT, ACCENT_HI, LINE, SUB, MUTED, ERR, OK, WARN, CT, TT, BLAU, ORANGE, GLOW, teamFarbe } from "../theme.js";
 import { Section, TeamChip, Dot, EventIcon, eventLabel, zeit, Leer, SpielChip, th, td } from "../ui.jsx";
 import { api } from "../api.js";
-import { SPIELE } from "../../core/spiele.js";
-import { Bomb, CircleCheck, CircleX, CircleMinus, Unplug, Crown } from "lucide-react";
+import { SPIELE, SPIEL_BY_ID } from "../../core/spiele.js";
+import { matchCheck } from "../../core/match-check.js";
+import { Bomb, CircleCheck, CircleX, CircleMinus, Unplug, Crown, RotateCcw } from "lucide-react";
 
 const PHASEN = { warmup: "Aufwärmen", live: "Live", intermission: "Halbzeit", gameover: "Match vorbei" };
 const RUNDEN = { freezetime: "Freezetime", live: "Runde läuft", over: "Runde vorbei" };
@@ -39,10 +40,12 @@ const Kennzahl = ({ label, wert, farbe }) => (
   </div>
 );
 
-function Ausgabe({ cfg, status }) {
+function Ausgabe({ cfg, status, zuruecksetzen, notify }) {
   const z = status.zaehler || {};
+  const zurueck = async () => { if (!confirm("Zähler auf null setzen und das Event-Log leeren?")) return; await zuruecksetzen(); notify("Zähler zurückgesetzt."); };
   return (
-    <Section title={cfg.armed ? "Ausgabe an" : "Ausgabe aus"} style={{ borderColor: cfg.armed ? OK : ERR, boxShadow: cfg.armed ? "0 0 16px rgba(46,204,113,.25)" : "0 0 16px rgba(255,93,93,.18)" }}>
+    <Section title={cfg.armed ? "Ausgabe an" : "Ausgabe aus"} style={{ borderColor: cfg.armed ? OK : ERR, boxShadow: cfg.armed ? "0 0 16px rgba(46,204,113,.25)" : "0 0 16px rgba(255,93,93,.18)" }}
+      right={<button style={S.smallBtn} title="Zähler auf null setzen und Event-Log leeren" onClick={zurueck}><RotateCcw size={12} /> Zurücksetzen</button>}>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <Kennzahl label="Ereignisse" wert={z.ereignisse || 0} farbe={ACCENT_HI} />
         <Kennzahl label="Verworfen" wert={z.verworfen || 0} farbe={z.verworfen ? WARN : MUTED} />
@@ -195,12 +198,17 @@ function Verbindungscheck({ cfg, status, jetzt }) {
     return { verbunden, daten, spiel, ok: verbunden && daten && spiel };
   };
   const ok = pcs.filter((p) => pruefen(p).ok).length;
+  const mc = matchCheck(pcs, cfg.aktivesSpiel);
+  const standText = (st) => !st ? "" : cfg.aktivesSpiel === "rl" ? `${st.arena || "Arena"} · ${st.blau}:${st.orange}${st.match ? ` · Match ${st.match}` : ""}` : `${st.map} · ${st.ct}:${st.tt}`;
   return (
-    <Section title="Verbindungscheck" right={pcs.length > 0 && <span style={{ fontSize: 12, fontWeight: 700, color: ok === pcs.length ? OK : WARN }}>{ok} / {pcs.length} PCs ok</span>}>
+    <Section title="Verbindungscheck" right={pcs.length > 0 && <span style={{ display: "inline-flex", gap: 12, fontSize: 12, fontWeight: 700 }}>
+      {mc.gesamt > 1 && <span style={{ color: mc.anzahl === mc.gesamt ? OK : WARN }} title={`Die meisten: ${standText(mc.ref)}`}>{mc.anzahl === mc.gesamt ? "alle im selben Match" : `${mc.gesamt - mc.anzahl} in anderem Match`}</span>}
+      <span style={{ color: ok === pcs.length ? OK : WARN }}>{ok} / {pcs.length} PCs ok</span>
+    </span>}>
       {pcs.length === 0 ? <Leer>Kein PC in der Session.</Leer> : (
         <table style={{ ...S.table, marginTop: 0 }}>
           <thead><tr>
-            <th style={th()}>PC</th><th style={th({ textAlign: "center" })}>Verbindung</th><th style={th({ textAlign: "center" })}>Daten</th><th style={th({ textAlign: "center" })}>Spiel</th>
+            <th style={th()}>PC</th><th style={th({ textAlign: "center" })}>Verbindung</th><th style={th({ textAlign: "center" })}>Daten</th><th style={th({ textAlign: "center" })}>Spiel</th><th style={th({ textAlign: "center" })} title="Gleiches Match wie die meisten PCs (RL: Match-ID, CS2: Map und Spielstand)">Match</th>
             <th style={th()}>Ping</th><th style={th()}>Spieler</th><th style={th()}>Erkennt</th><th style={th()}>Zuletzt</th><th style={th()}></th>
           </tr></thead>
           <tbody>
@@ -212,7 +220,9 @@ function Verbindungscheck({ cfg, status, jetzt }) {
                   <td style={td({ textAlign: "center" })}><Ampel ok={c.verbunden} title={c.verbunden ? "verbunden" : "getrennt"} /></td>
                   <td style={td({ textAlign: "center" })}><Ampel ok={c.daten} teil={c.verbunden} title={c.daten ? "Daten kommen" : "keine aktuellen Daten"} /></td>
                   <td style={td({ textAlign: "center" })}>{p.spiel ? <SpielChip spiel={p.spiel} aktiv={c.spiel} /> : <span style={{ color: MUTED }}>–</span>}</td>
-                  <td style={td({ color: p.ping == null ? MUTED : p.ping > 50 ? WARN : SUB, fontSize: 12, fontVariantNumeric: "tabular-nums" })}>{p.sim ? "–" : p.ping == null ? "–" : `${p.ping} ms`}</td>
+                  <td style={td({ textAlign: "center" })}>{mc.ergebnis[p.pcId] ? <Ampel ok={mc.ergebnis[p.pcId] === "gleich"} teil
+                    title={mc.ergebnis[p.pcId] === "gleich" ? `gleiches Match: ${standText(p.stand)}` : `anderes Match: ${standText(p.stand)}, die meisten: ${standText(mc.ref)}`} /> : <span style={{ color: MUTED }} title="kein Spielstand vom aktiven Spiel">–</span>}</td>
+                  <td style={td({ color: p.ping == null ? MUTED : p.ping > 50 ? WARN : SUB, fontSize: 12, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" })}>{p.sim ? "–" : p.ping == null ? "–" : `${p.ping} ms`}</td>
                   <td style={td({ fontSize: 12 })}>{s.spieler ? <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>{s.spieler} <TeamChip team={s.team} /></span> : <span style={{ color: MUTED }}>–</span>}</td>
                   <td style={td()}><span style={{ display: "inline-flex", gap: 4 }}>{(p.spiele || []).map((x) => <SpielChip key={x} spiel={x} aktiv={x === cfg.aktivesSpiel} />)}</span></td>
                   <td style={td({ color: SUB, fontSize: 12, whiteSpace: "nowrap" })}>{p.t ? `${Math.max(0, Math.round((jetzt - p.t) / 1000))} s` : "–"}</td>
@@ -229,11 +239,12 @@ function Verbindungscheck({ cfg, status, jetzt }) {
 
 /* ── Log ──────────────────────────────────────────────────────────────── */
 export function EventZeile({ e, neu }) {
-  const team = e.ev.team;
+  const team = e.ev.team, spielFarbe = SPIEL_BY_ID[e.ev.spiel]?.farbe || LINE;
   return (
-    <div className={neu ? "neu" : ""} style={{ padding: "7px 10px", borderBottom: `1px solid ${LINE}` }}>
+    <div className={neu ? "neu" : ""} style={{ padding: "7px 10px 7px 8px", borderBottom: `1px solid ${LINE}`, borderLeft: `3px solid ${spielFarbe}` }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ fontSize: 11, color: MUTED, fontVariantNumeric: "tabular-nums" }}>{zeit(e.t)}</span>
+        <span style={{ display: "inline-flex", minWidth: 38 }}><SpielChip spiel={e.ev.spiel} /></span>
         <span style={{ color: team ? teamFarbe(team) : ACCENT_HI, display: "inline-flex" }}><EventIcon type={e.ev.type} spiel={e.ev.spiel} /></span>
         <b style={{ fontSize: 13 }}>{eventLabel(e.ev.type, e.ev.spiel)}</b>
         <TeamChip team={team} />
@@ -242,33 +253,35 @@ export function EventZeile({ e, neu }) {
         <span style={{ fontSize: 10, color: MUTED }}>{e.quelle === "manuell" ? "manuell" : e.ev.pc}</span>
       </div>
       {e.verworfen ? (
-        <div style={{ fontSize: 11, marginTop: 2, paddingLeft: 66, color: WARN, display: "flex", gap: 6, alignItems: "center" }}>
-          verworfen: {VERWORFEN[e.verworfen] || e.verworfen}{e.verworfen === "anderes Spiel" && <SpielChip spiel={e.ev.spiel} />}
+        <div style={{ fontSize: 11, marginTop: 2, paddingLeft: 112, color: WARN, display: "flex", gap: 6, alignItems: "center" }}>
+          verworfen: {VERWORFEN[e.verworfen] || e.verworfen}
         </div>
       ) : e.gesperrt ? (
-        <div style={{ fontSize: 11, marginTop: 2, paddingLeft: 66, color: MUTED }}>kein Befehl</div>
+        <div style={{ fontSize: 11, marginTop: 2, paddingLeft: 112, color: MUTED }}>kein Befehl</div>
       ) : (e.befehle || []).map((b, i) => (
-        <div key={i} style={{ ...S.mono, fontSize: 11, marginTop: 2, paddingLeft: 66, color: b.fehler ? ERR : !e.scharf ? MUTED : "#d9c6ff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div key={i} style={{ ...S.mono, fontSize: 11, marginTop: 2, paddingLeft: 112, color: b.fehler ? ERR : !e.scharf ? MUTED : "#d9c6ff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           <span style={{ color: b.fehler ? ERR : !e.scharf ? WARN : OK }}>{b.ziel}</span>
           <span style={{ marginLeft: 8 }}>{b.fehler || b.nachrichten.join("  ·  ")}</span>
           {!e.scharf && !b.fehler && <span style={{ marginLeft: 8, color: WARN }}>nicht gesendet</span>}
         </div>
       ))}
-      {e.fehler?.length > 0 && e.scharf && <div style={{ fontSize: 11, marginTop: 2, paddingLeft: 66, color: ERR }}>{e.fehler.join(", ")}</div>}
+      {e.fehler?.length > 0 && e.scharf && <div style={{ fontSize: 11, marginTop: 2, paddingLeft: 112, color: ERR }}>{e.fehler.join(", ")}</div>}
     </div>
   );
 }
 
 const VERWORFEN = { "anderes Spiel": "anderes Spiel als das aktive", doppelt: "doppelt, ein anderer PC hat es schon gemeldet" };
 const hatFehler = (e) => e.fehler?.length > 0 || (e.befehle || []).some((b) => b.fehler);
+// [Schlüssel, Name, Filter, Zähler der Regie]. Die Zahlen kommen aus den Zählern, die Liste hält nur die letzten 300 je Art.
 const FILTER = [
-  ["alle", "Alle", (e) => !e.verworfen],
-  ["eingerichtet", "Eingerichtet", (e) => !e.verworfen && !e.gesperrt],
-  ["fehler", "Fehler", (e) => !e.verworfen && hatFehler(e)],
-  ["verworfen", "Verworfen", (e) => !!e.verworfen],
+  ["alle", "Alle", (e) => !e.verworfen, "ereignisse"],
+  ["eingerichtet", "Eingerichtet", (e) => !e.verworfen && !e.gesperrt, "eingerichtet"],
+  ["fehler", "Fehler", (e) => !e.verworfen && hatFehler(e), "fehler"],
+  ["verworfen", "Verworfen", (e) => !!e.verworfen, "verworfen"],
 ];
 
-function Log({ log }) {
+function Log({ log, status }) {
+  const z = status.zaehler || {};
   const [filter, setFilter] = useState(() => { try { return localStorage.getItem("advancedlan_logfilter") || "alle"; } catch { return "alle"; } });
   const waehle = (f) => { setFilter(f); try { localStorage.setItem("advancedlan_logfilter", f); } catch {} };
   const aktiv = FILTER.find(([k]) => k === filter) || FILTER[0];
@@ -278,8 +291,8 @@ function Log({ log }) {
   return (
     <Section title="Events" style={{ position: "sticky", top: 0 }} right={
       <div style={{ display: "flex", gap: 4 }}>
-        {FILTER.map(([k, label, f]) => {
-          const n = log.filter(f).length, an = k === aktiv[0];
+        {FILTER.map(([k, label, f, zk]) => {
+          const n = z[zk] ?? log.filter(f).length, an = k === aktiv[0];
           return (
             <button key={k} onClick={() => waehle(k)} style={{ ...S.smallBtn, ...(an ? { borderColor: ACCENT, color: "#fff", boxShadow: GLOW } : { color: SUB }) }}>
               {label}<span style={{ ...S.badge, marginLeft: 2, background: n && farbe[k] ? farbe[k] + "33" : "#1a1820", color: n && farbe[k] ? farbe[k] : MUTED }}>{n}</span>
@@ -290,23 +303,24 @@ function Log({ log }) {
       <div style={{ height: "calc(100vh - 400px)", minHeight: 300, overflowY: "auto", border: `1px solid ${LINE}`, borderRadius: 8, background: "#1a1820" }}>
         {liste.length === 0 ? <div style={{ ...S.empty, padding: 14 }}>{log.length ? "Keine Events in diesem Filter." : "Noch keine Events."}</div> : liste.map((e) => <EventZeile key={e.id} e={e} neu={e.id === neuesteId} />)}
       </div>
+      {(z[aktiv[3]] ?? 0) > liste.length && liste.length > 0 && <div style={{ fontSize: 11, color: MUTED, marginTop: 6 }}>Die Liste zeigt die letzten {liste.length} von {z[aktiv[3]]}.</div>}
     </Section>
   );
 }
 
-export default function ControlTab({ cfg, mutate, status, log, jetzt }) {
+export default function ControlTab({ cfg, mutate, status, log, jetzt, zuruecksetzen, notify }) {
   return (
     <>
       <div style={{ display: "grid", gridTemplateColumns: "1.25fr 1fr", gap: 20 }}>
         <SpielWahl cfg={cfg} mutate={mutate} />
-        <Ausgabe cfg={cfg} status={status} />
+        <Ausgabe cfg={cfg} status={status} zuruecksetzen={zuruecksetzen} notify={notify} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1.25fr 1fr", gap: 20, alignItems: "start" }}>
         <div>
           <Verbindungscheck cfg={cfg} status={status} jetzt={jetzt} />
           <Statistik cfg={cfg} status={status} />
         </div>
-        <Log log={log} />
+        <Log log={log} status={status} />
       </div>
     </>
   );

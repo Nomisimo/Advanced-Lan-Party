@@ -3,14 +3,16 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data:">
 <style>
   html, body { margin: 0; background: transparent; overflow: hidden; user-select: none; }
-  #knopf { position: absolute; inset: 6px; border-radius: 14px; background: radial-gradient(circle at 50% 38%, #2a2238, #16131d); border: 2px solid #9d5cff;
-    box-shadow: 0 0 10px rgba(157, 92, 255, .6); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  #knopf:hover { box-shadow: 0 0 16px rgba(157, 92, 255, .95); }
+  /* Der Glow muss in den Rand des 64-px-Fensters passen (8 px), sonst wird er hart abgeschnitten */
+  #knopf { position: absolute; inset: 8px; border-radius: 13px; background: radial-gradient(circle at 50% 38%, #2a2238, #16131d); border: 2px solid #9d5cff;
+    box-shadow: 0 0 5px rgba(157, 92, 255, .55); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  #knopf:hover { box-shadow: 0 0 7px rgba(157, 92, 255, .9); }
   #knopf svg { width: 70%; filter: drop-shadow(0 0 4px rgba(157, 92, 255, .8)); }
-  #punkt { position: absolute; right: 2px; top: 2px; width: 13px; height: 13px; border-radius: 50%; border: 2px solid #16131d; background: #7f7a8e; }
-  #punkt.ok { background: #2ecc71; box-shadow: 0 0 8px #2ecc71; }
-  #punkt.warn { background: #f39c12; box-shadow: 0 0 8px #f39c12; }
-  #punkt.err { background: #ff5d5d; box-shadow: 0 0 8px #ff5d5d; animation: blink 1.2s ease-in-out infinite; }
+  /* Statuspunkt ohne eigenen Glow, mit dunklem Ring vom Glow des Icons abgesetzt */
+  #punkt { position: absolute; right: 3px; top: 3px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #16131d; background: #7f7a8e; }
+  #punkt.ok { background: #2ecc71; }
+  #punkt.warn { background: #f39c12; }
+  #punkt.err { background: #ff5d5d; animation: blink 1.2s ease-in-out infinite; }
   @keyframes blink { 50% { opacity: .35; } }
 </style></head>
 <body>

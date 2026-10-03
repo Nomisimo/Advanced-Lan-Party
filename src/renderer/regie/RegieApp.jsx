@@ -40,7 +40,8 @@ export default function RegieApp({ cfg: alles, mutate: mutateAlles, status: st, 
   const aktiv = SPIEL_BY_ID[cfg.aktivesSpiel];
   const an = !!cfg.armed;
   const ses = status.session;
-  const shared = { cfg, mutate, status, log, jetzt, notify, version, goTab: setTab };
+  const zuruecksetzen = async () => { await api.zaehlerZuruecksetzen(); setLog([]); };
+  const shared = { cfg, mutate, status, log, jetzt, notify, version, goTab: setTab, zuruecksetzen };
 
   return (
     <div style={S.app}>

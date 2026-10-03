@@ -40,7 +40,7 @@ function spielStandRl(d) {
   const score = (n) => teams.find((t) => Number(t.TeamNum) === n)?.Score ?? 0;
   return {
     blau: score(0), orange: score(1), zeit: Number(g.TimeSeconds) || 0, overtime: !!g.bOvertime,
-    arena: String(g.Arena || d.Arena || ""), spieler: Array.isArray(d.Players) ? d.Players.length : 0,
+    arena: String(g.Arena || d.Arena || ""), spieler: Array.isArray(d.Players) ? d.Players.length : 0, match: String(d.MatchGuid || ""),
   };
 }
 

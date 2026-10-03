@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('regieAPI', {
   openExternal:    call('open-external'),
   // Regie
   regieLog:        call('regie-log'),
+  zaehlerZuruecksetzen: call('zaehler-zuruecksetzen'),
   sessionOeffnen:  call('session-oeffnen'),
   sessionSchliessen: call('session-schliessen'),
   pcTrennen:       call('pc-trennen'),

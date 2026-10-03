@@ -7,6 +7,9 @@ const { befehleFuer, zeigeNachricht } = require("./signal");
 const { Statistik } = require("./statistik");
 
 const LOG_MAX = 300;
+// Zählen dasselbe wie die Filter im Event-Log, nur ohne dessen Grenze von LOG_MAX Einträgen.
+// fehler = Ereignisse mit mindestens einem Fehler, gesendet = einzelne OSC-Nachrichten.
+const neueZaehler = () => ({ ereignisse: 0, eingerichtet: 0, verworfen: 0, gesendet: 0, fehler: 0 });
 
 class Regie {
   constructor({ getConfig, send, emit, now = Date.now }) {
@@ -19,7 +22,7 @@ class Regie {
     this.log = [];
     this.verworfenLog = [];
     this.dedupe = new Dedupe();
-    this.zaehler = { ereignisse: 0, verworfen: 0, gesendet: 0, fehler: 0 };
+    this.zaehler = neueZaehler();
     this.nr = 0;
     this.statistik = new Statistik();
   }
@@ -83,11 +86,13 @@ class Regie {
     const cfg = this.getConfig(), now = this.now();
     this.zaehler.ereignisse++;
     const befehle = befehleFuer(cfg, ev);
+    if (befehle.length) this.zaehler.eingerichtet++;
     const eintrag = {
       id: ++this.nr, t: now, ev, quelle, scharf: !!cfg.armed, gesperrt: befehle.length === 0,
       befehle: befehle.map((b) => ({ ziel: b.ziel?.name || "?", typ: b.ziel?.typ || "", nachrichten: b.nachrichten.map(zeigeNachricht), fehler: b.fehler })),
       fehler: befehle.filter((b) => b.fehler).map((b) => `${b.ziel?.name || "?"}: ${b.fehler}`),
     };
+    if (eintrag.fehler.length) this.fehlerZaehlen(eintrag);
     if (cfg.armed) for (const b of befehle) this.ausgeben(b, eintrag);
     if (ev.spiel === this.aktiv()) this.statistik.add(ev);
     this.log.unshift(eintrag);
@@ -112,12 +117,28 @@ class Regie {
     for (const n of b.nachrichten) {
       this.zaehler.gesendet++;
       Promise.resolve(this.send({ ziel, address: n.address, args: n.args })).catch((e) => {
-        this.zaehler.fehler++;
+        if (k.id) this.fehlerZaehlen(k);
         k.fehler.push(`${ziel.name || ziel.host}: ${e.message}`);
         this.emit("fehler", `${ziel.name || ziel.host}: ${e.message}`);
         if (k.id) this.emit("event", k); // Log-Eintrag mit dem Fehler erneut melden (gleiche ID)
       });
     }
+  }
+
+  // Jedes Ereignis zählt höchstens einmal als Fehler, egal wie viele Nachrichten scheitern
+  fehlerZaehlen(k) {
+    if (k.fehlerGezaehlt) return;
+    k.fehlerGezaehlt = true;
+    this.zaehler.fehler++;
+    this.emit("status");
+  }
+
+  // Knopf „Zurücksetzen“ im Control-Tab: Zähler auf null, Event-Log leer
+  zuruecksetzen() {
+    this.zaehler = neueZaehler();
+    this.log = [];
+    this.verworfenLog = [];
+    this.emit("status");
   }
 
   snapshot() {

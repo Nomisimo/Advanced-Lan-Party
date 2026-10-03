@@ -14,7 +14,7 @@ test("Rocket League: Stats-API-Nachrichten werden zu Events", () => {
   assert.deepEqual(typen({ Event: "MatchInitialized", Data: {} }), ["match_start::"]);
   assert.deepEqual(typen(zustand(false)), []);
   assert.deepEqual(typen(zustand(true)), ["overtime::"]);
-  assert.deepEqual(q.ingest(zustand(true), 1).stand, { blau: 2, orange: 2, zeit: 0, overtime: true, arena: "DFH Stadium", spieler: 2 });
+  assert.deepEqual(q.ingest(zustand(true), 1).stand, { blau: 2, orange: 2, zeit: 0, overtime: true, arena: "DFH Stadium", spieler: 2, match: "" });
   // Data kann auch als JSON-Text kommen
   assert.deepEqual(typen({ Event: "GoalScored", Data: JSON.stringify({ Scorer: { Name: "Momo", TeamNum: 1 }, GoalSpeed: 98.6 }) }), ["goal:ORANGE:Momo"]);
   assert.deepEqual(typen({ Event: "StatfeedEvent", Data: { EventName: "Goal", MainTarget: { Name: "Momo", TeamNum: 1 } } }), [], "Tore nur aus GoalScored");
