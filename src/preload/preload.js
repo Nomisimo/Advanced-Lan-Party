@@ -13,6 +13,13 @@ contextBridge.exposeInMainWorld('regieAPI', {
   onStatus:        abo('status'),
   onMeldung:       abo('meldung'),
   openExternal:    call('open-external'),
+  // Updates (wie im Netzwerkplaner)
+  fetchReleases:   call('fetch-releases'),
+  checkForUpdates: call('check-for-updates'),
+  installUpdate:   call('install-update'),
+  macUpdateLaden:  call('mac-update-laden'),
+  appBeenden:      call('app-beenden'),
+  onUpdateStatus:  abo('update-status'),
   // Regie
   regieLog:        call('regie-log'),
   zaehlerZuruecksetzen: call('zaehler-zuruecksetzen'),

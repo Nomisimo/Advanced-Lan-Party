@@ -1,6 +1,6 @@
 {
   "name": "advanced-lan",
-  "version": "0.1.0-beta.3",
+  "version": "0.1.0-beta.4",
   "private": true,
   "description": "Advanced LAN: Game-PCs melden Spielereignisse, die Regie sendet OSC-Befehle an Licht, Audio und Video",
   "author": "Momo",
@@ -50,6 +50,11 @@
     "directories": {
       "output": "dist"
     },
+    "publish": {
+      "provider": "github",
+      "owner": "Nomisimo",
+      "repo": "Advanced-Lan-Party"
+    },
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "mac": {
       "target": [
@@ -85,6 +90,7 @@
   },
   "dependencies": {
     "bonjour-service": "^1.4.4",
+    "electron-updater": "^6.8.9",
     "ws": "^8.22.0"
   }
 }

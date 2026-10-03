@@ -21,6 +21,7 @@ const { kartenListe, lokaleIp } = require('../core/netzwerk');
 const { SimRunner } = require('../core/sim-runner');
 const { SimMatch } = require('../core/gsi-sim');
 const { RlSimMatch } = require('../core/rl-sim');
+const { einrichtenUpdates } = require('./updates');
 const os = require('os');
 
 const karten = () => kartenListe(os.networkInterfaces());
@@ -372,6 +373,7 @@ setInterval(overlayMelden, 2000).unref(); // Daten veralten auch ohne neue Meldu
 
 /* ── IPC ──────────────────────────────────────────────────────────────── */
 ipcMain.handle('app-version', () => app.getVersion());
+const updates = einrichtenUpdates({ app, ipcMain, shell, getWin: () => mainWin });
 ipcMain.handle('config-get', () => cfg);
 ipcMain.handle('config-set', async (_, neu) => {
   const alt = cfg;
@@ -478,6 +480,7 @@ else {
   app.whenReady().then(async () => {
     ladeKonfig();
     createWindow();
+    updates.autoUpdaterStarten();
     await modusStarten();
   });
   app.on('window-all-closed', async () => {
